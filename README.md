@@ -1,4 +1,4 @@
-Brain Tumor Detection using Otsu Thresholding with Genetic Algorithm Optimization
+##### Brain Tumor Detection using Otsu Thresholding with Genetic Algorithm Optimization
 *   **Libraries Used**:
     *   `numpy`: For numerical operations.
     *   `opencv-python` (`cv2`): For image processing functions (loading images, calculating histograms, traditional Otsu).
@@ -27,8 +27,3 @@ The script provides two options for loading your image dataset [1]:
 4.  When asked, provide the full path to a specific image you want to analyze (e.g., `/content/dataset/yes/Y1.jpg`).
 5.  The script will execute the GA optimization process and display a comprehensive analysis plot comparing the GA-Otsu method with the traditional Otsu method.
 6.  You will have the option to save the final analysis image to your Colab environment.
-
-Sources and related content
-ga
-
-PDF
