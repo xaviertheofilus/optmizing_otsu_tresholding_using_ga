@@ -1,4 +1,5 @@
-##### Brain Tumor Detection using Otsu Thresholding with Genetic Algorithm Optimization
+####### Brain Tumor Detection using Otsu Thresholding with Genetic Algorithm Optimization
+### 1. Setup Library
 *   **Libraries Used**:
     *   `numpy`: For numerical operations.
     *   `opencv-python` (`cv2`): For image processing functions (loading images, calculating histograms, traditional Otsu).
