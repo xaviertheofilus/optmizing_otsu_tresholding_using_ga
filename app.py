@@ -17,14 +17,14 @@ class GAOtsuThresholding:
         self.generations = generations
         self.mutation_rate = mutation_rate
         self.crossover_rate = crossover_rate
-        # CORRECTED: Initialize lists properly
-        self.fitness_history =
-        self.best_threshold_history =
+        # FIXED: Initialize lists properly
+        self.fitness_history = []
+        self.best_threshold_history = []
 
     def otsu_fitness(self, image: np.ndarray, threshold: int) -> float:
         """Menghitung fungsi fitness berdasarkan kriteria Otsu."""
-        # CORRECTED: Ensure calcHist has the correct parameters
-        hist = cv2.calcHist([image], , None, , ).flatten()
+        # FIXED: Ensure calcHist has the correct parameters
+        hist = cv2.calcHist([image], [0], None, [256], [0, 256]).flatten()
         hist = hist.astype(np.float64)
         total_pixels = image.size
         prob = hist / total_pixels
@@ -73,8 +73,8 @@ class GAOtsuThresholding:
 
     def optimize(self, image: np.ndarray, progress_bar) -> Tuple[int, float]:
         """Proses optimasi utama GA."""
-        self.fitness_history =
-        self.best_threshold_history =
+        self.fitness_history = []
+        self.best_threshold_history = []
         population = self.initialize_population()
 
         for gen in range(self.generations):
@@ -133,41 +133,41 @@ def create_comprehensive_analysis(image: np.ndarray, ga_threshold: int, traditio
     plt.style.use('default')
     fig, axes = plt.subplots(2, 4, figsize=(20, 10))
     
-    # CORRECTED: Use proper indexing for all subplots (e.g., axes)
+    # FIXED: Use proper indexing for all subplots
     # 1. Citra Original
-    axes.imshow(image, cmap='gray')
-    axes.set_title('Original Image', fontweight='bold')
-    axes.axis('off')
+    axes[0, 0].imshow(image, cmap='gray')
+    axes[0, 0].set_title('Original Image', fontweight='bold')
+    axes[0, 0].axis('off')
 
     # 2. Histogram dengan threshold lines
-    hist = cv2.calcHist([image], , None, , ).flatten()
-    axes.plot(hist, color='blue', linewidth=2)
-    axes.axvline(ga_threshold, color='red', linestyle='--', linewidth=2, label=f'GA: {ga_threshold}')
-    axes.axvline(traditional_threshold, color='green', linestyle='-', linewidth=2, label=f'Otsu: {traditional_threshold}')
-    axes.set_title('Histogram with Thresholds', fontweight='bold')
-    axes.set_xlabel('Pixel Intensity')
-    axes.set_ylabel('Frequency')
-    axes.legend()
-    axes.grid(True, alpha=0.3)
+    hist = cv2.calcHist([image], [0], None, [256], [0, 256]).flatten()
+    axes[0, 1].plot(hist, color='blue', linewidth=2)
+    axes[0, 1].axvline(ga_threshold, color='red', linestyle='--', linewidth=2, label=f'GA: {ga_threshold}')
+    axes[0, 1].axvline(traditional_threshold, color='green', linestyle='-', linewidth=2, label=f'Otsu: {traditional_threshold}')
+    axes[0, 1].set_title('Histogram with Thresholds', fontweight='bold')
+    axes[0, 1].set_xlabel('Pixel Intensity')
+    axes[0, 1].set_ylabel('Frequency')
+    axes[0, 1].legend()
+    axes[0, 1].grid(True, alpha=0.3)
 
     # 3. Hasil GA Thresholding
     ga_result = apply_threshold(image, ga_threshold)
-    axes.imshow(ga_result, cmap='gray')
-    axes.set_title(f'GA Threshold: {ga_threshold}', fontweight='bold')
-    axes.axis('off')
+    axes[0, 2].imshow(ga_result, cmap='gray')
+    axes[0, 2].set_title(f'GA Threshold: {ga_threshold}', fontweight='bold')
+    axes[0, 2].axis('off')
 
     # 4. Hasil Traditional Otsu
     otsu_result = apply_threshold(image, traditional_threshold)
-    axes.imshow(otsu_result, cmap='gray')
-    axes.set_title(f'Traditional Otsu: {traditional_threshold}', fontweight='bold')
-    axes.axis('off')
+    axes[0, 3].imshow(otsu_result, cmap='gray')
+    axes[0, 3].set_title(f'Traditional Otsu: {traditional_threshold}', fontweight='bold')
+    axes[0, 3].axis('off')
 
     # 5. Evolusi Fitness
-    axes.plot(ga_optimizer.fitness_history, 'b', linewidth=2, marker='o', markersize=3)
-    axes.set_title('Fitness Evolution', fontweight='bold')
-    axes.set_xlabel('Generation')
-    axes.set_ylabel('Fitness Score')
-    axes.grid(True, alpha=0.3)
+    axes[1, 0].plot(ga_optimizer.fitness_history, 'b', linewidth=2, marker='o', markersize=3)
+    axes[1, 0].set_title('Fitness Evolution', fontweight='bold')
+    axes[1, 0].set_xlabel('Generation')
+    axes[1, 0].set_ylabel('Fitness Score')
+    axes[1, 0].grid(True, alpha=0.3)
 
     # 6. Evolusi Threshold
     axes[1, 1].plot(ga_optimizer.best_threshold_history, 'r', linewidth=2, marker='s', markersize=3)
@@ -181,38 +181,40 @@ def create_comprehensive_analysis(image: np.ndarray, ga_threshold: int, traditio
     # 7. Perbandingan Fitness
     ga_fitness = ga_optimizer.otsu_fitness(image, ga_threshold)
     otsu_fitness = ga_optimizer.otsu_fitness(image, traditional_threshold)
-    # CORRECTED: Initialize list with values
-    methods =
+    # FIXED: Initialize list with values
+    methods = ['GA Method', 'Traditional Otsu']
     fitness_scores = [ga_fitness, otsu_fitness]
-    # CORRECTED: Fix syntax for bar plot
-    bars = axes.[1, 2]bar(methods, fitness_scores, color=['red', 'green'], alpha=0.7)
-    axes.[1, 2]set_title('Fitness Comparison', fontweight='bold')
-    axes.[1, 2]set_ylabel('Fitness Score')
+    # FIXED: Fix syntax for bar plot
+    bars = axes[1, 2].bar(methods, fitness_scores, color=['red', 'green'], alpha=0.7)
+    axes[1, 2].set_title('Fitness Comparison', fontweight='bold')
+    axes[1, 2].set_ylabel('Fitness Score')
     for bar, score in zip(bars, fitness_scores):
-        axes.[1, 2]text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{score:.5f}', ha='center', va='bottom', fontweight='bold')
+        axes[1, 2].text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{score:.5f}', ha='center', va='bottom', fontweight='bold')
 
     # 8. Statistik Segmentasi
     ga_white_pixels = np.sum(ga_result == 255)
     otsu_white_pixels = np.sum(otsu_result == 255)
     total_pixels = image.size
     stats_text = f"""ANALYSIS RESULTS:
-    GA Method:
-    - Threshold: {ga_threshold}
-    - Fitness: {ga_fitness:.6f}
-    - White Pixels: {ga_white_pixels:,} ({ga_white_pixels/total_pixels*100:.1f}%)
+GA Method:
+- Threshold: {ga_threshold}
+- Fitness: {ga_fitness:.6f}
+- White Pixels: {ga_white_pixels:,} ({ga_white_pixels/total_pixels*100:.1f}%)
 
-    Traditional Otsu:
-    - Threshold: {traditional_threshold}
-    - Fitness: {otsu_fitness:.6f}
-    - White Pixels: {otsu_white_pixels:,} ({otsu_white_pixels/total_pixels*100:.1f}%)
+Traditional Otsu:
+- Threshold: {traditional_threshold}
+- Fitness: {otsu_fitness:.6f}
+- White Pixels: {otsu_white_pixels:,} ({otsu_white_pixels/total_pixels*100:.1f}%)
 
-    Difference:
-    - Threshold: {abs(ga_threshold - traditional_threshold)}
-    - Fitness: {abs(ga_fitness - otsu_fitness):.6f}
-    """
-    # CORRECTED: Fix syntax for text box
-    axes.[1, 3]text(0.05, 0.95, stats_text, transform=axes.[1, 3]transAxes, fontsize=10, verticalalignment='top', fontfamily='monospace', bbox=dict(boxstyle="round,pad=0.5", facecolor="lightblue", alpha=0.8))
-    axes.[1, 3]axis('off')
+Difference:
+- Threshold: {abs(ga_threshold - traditional_threshold)}
+- Fitness: {abs(ga_fitness - otsu_fitness):.6f}
+"""
+    # FIXED: Fix syntax for text box
+    axes[1, 3].text(0.05, 0.95, stats_text, transform=axes[1, 3].transAxes, fontsize=10, 
+                    verticalalignment='top', fontfamily='monospace', 
+                    bbox=dict(boxstyle="round,pad=0.5", facecolor="lightblue", alpha=0.8))
+    axes[1, 3].axis('off')
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     fig.suptitle('Genetic Algorithm vs Traditional Otsu Analysis', fontsize=16, fontweight='bold')
@@ -220,7 +222,7 @@ def create_comprehensive_analysis(image: np.ndarray, ga_threshold: int, traditio
 
 # --- Streamlit App Main Interface ---
 st.set_page_config(layout="wide")
-st.title("Genetic Algorithm for Otsu Thresholding Optimization by image")
+st.title("Genetic Algorithm for Otsu Thresholding Optimization")
 
 st.write("Upload an MRI image of a brain to perform segmentation using a Genetic Algorithm-optimized Otsu threshold and compare it with the traditional method.")
 
@@ -231,7 +233,7 @@ if uploaded_file is not None:
     
     col1, col2 = st.columns(2)
     with col1:
-        st.image(image, caption='Uploaded and Preprocessed Image', cmap='gray')
+        st.image(image, caption='Uploaded and Preprocessed Image', use_column_width=True)
 
     with col2:
         if st.button('Run Analysis', use_container_width=True):
