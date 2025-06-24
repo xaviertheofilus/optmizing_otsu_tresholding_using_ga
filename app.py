@@ -7,7 +7,6 @@ from typing import Tuple, List
 from PIL import Image
 
 # --- Genetic Algorithm Core Class (from your notebook) ---
-# This class is copied directly from your project code.
 class GAOtsuThresholding:
     """
     Implementasi Genetic Algorithm untuk optimasi Otsu Thresholding
@@ -36,7 +35,7 @@ class GAOtsuThresholding:
         mu0 = np.sum(np.arange(threshold) * prob[:threshold]) / w0
         mu1 = np.sum(np.arange(threshold, 256) * prob[threshold:]) / w1
         
-        between_class_variance = w0 * w1 * (mu0 - mu1)**2
+        between_class_variance = w0 * w1 * ((mu0 - mu1)**2)
         return between_class_variance
 
     def initialize_population(self) -> List[int]:
@@ -119,7 +118,6 @@ def calculate_traditional_otsu(image: np.ndarray) -> int:
     return int(threshold)
 
 def create_comprehensive_analysis(image: np.ndarray, ga_threshold: int, traditional_threshold: int, ga_optimizer: GAOtsuThresholding):
-    # This function is copied directly from your project code to maintain the visualization style.
     plt.style.use('default')
     fig, axes = plt.subplots(2, 4, figsize=(20, 10))
     
