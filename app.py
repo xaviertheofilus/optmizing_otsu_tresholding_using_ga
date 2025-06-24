@@ -1,10 +1,18 @@
 import streamlit as st
 import numpy as np
-import cv2
 import matplotlib.pyplot as plt
 import random
 from typing import Tuple, List
 from PIL import Image
+
+# Error handling untuk OpenCV
+try:
+    import cv2
+    CV2_AVAILABLE = True
+except ImportError as e:
+    st.error(f"OpenCV tidak dapat diimpor: {e}")
+    st.info("Mencoba menggunakan alternatif untuk beberapa fungsi OpenCV...")
+    CV2_AVAILABLE = False
 
 # --- Genetic Algorithm Core Class ---
 class GAOtsuThresholding:
@@ -23,8 +31,13 @@ class GAOtsuThresholding:
 
     def otsu_fitness(self, image: np.ndarray, threshold: int) -> float:
         """Menghitung fungsi fitness berdasarkan kriteria Otsu."""
-        # FIXED: Ensure calcHist has the correct parameters
-        hist = cv2.calcHist([image], [0], None, [256], [0, 256]).flatten()
+        if CV2_AVAILABLE:
+            # Menggunakan OpenCV
+            hist = cv2.calcHist([image], [0], None, [256], [0, 256]).flatten()
+        else:
+            # Alternatif tanpa OpenCV
+            hist, _ = np.histogram(image, bins=256, range=(0, 256))
+        
         hist = hist.astype(np.float64)
         total_pixels = image.size
         prob = hist / total_pixels
@@ -114,9 +127,21 @@ def load_and_preprocess_image(uploaded_file) -> np.ndarray:
         scale = 512 / max(height, width)
         new_height = int(height * scale)
         new_width = int(width * scale)
-        image = cv2.resize(image, (new_width, new_height))
-        
-    image = cv2.medianBlur(image, 3)
+        # Menggunakan PIL untuk resize jika OpenCV tidak tersedia
+        if CV2_AVAILABLE:
+            image = cv2.resize(image, (new_width, new_height))
+        else:
+            pil_image = Image.fromarray(image)
+            pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            image = np.array(pil_image)
+    
+    # Median blur menggunakan scipy jika OpenCV tidak tersedia
+    if CV2_AVAILABLE:
+        image = cv2.medianBlur(image, 3)
+    else:
+        from scipy import ndimage
+        image = ndimage.median_filter(image, size=3)
+    
     return image
 
 def apply_threshold(image: np.ndarray, threshold: int) -> np.ndarray:
@@ -124,9 +149,37 @@ def apply_threshold(image: np.ndarray, threshold: int) -> np.ndarray:
     return (image > threshold).astype(np.uint8) * 255
 
 def calculate_traditional_otsu(image: np.ndarray) -> int:
-    """Hitung threshold menggunakan metode Otsu tradisional dari OpenCV."""
-    threshold, _ = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    return int(threshold)
+    """Hitung threshold menggunakan metode Otsu tradisional."""
+    if CV2_AVAILABLE:
+        threshold, _ = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        return int(threshold)
+    else:
+        # Implementasi Otsu manual
+        hist, _ = np.histogram(image, bins=256, range=(0, 256))
+        hist = hist.astype(np.float64)
+        total_pixels = image.size
+        prob = hist / total_pixels
+        
+        max_variance = 0
+        best_threshold = 0
+        
+        for threshold in range(1, 255):
+            w0 = np.sum(prob[:threshold])
+            w1 = np.sum(prob[threshold:])
+            
+            if w0 == 0 or w1 == 0:
+                continue
+                
+            mu0 = np.sum(np.arange(threshold) * prob[:threshold]) / w0
+            mu1 = np.sum(np.arange(threshold, 256) * prob[threshold:]) / w1
+            
+            between_class_variance = w0 * w1 * ((mu0 - mu1)**2)
+            
+            if between_class_variance > max_variance:
+                max_variance = between_class_variance
+                best_threshold = threshold
+        
+        return best_threshold
 
 def create_comprehensive_analysis(image: np.ndarray, ga_threshold: int, traditional_threshold: int, ga_optimizer: GAOtsuThresholding):
     """Membuat visualisasi komprehensif untuk analisis hasil."""
@@ -140,7 +193,11 @@ def create_comprehensive_analysis(image: np.ndarray, ga_threshold: int, traditio
     axes[0, 0].axis('off')
 
     # 2. Histogram dengan threshold lines
-    hist = cv2.calcHist([image], [0], None, [256], [0, 256]).flatten()
+    if CV2_AVAILABLE:
+        hist = cv2.calcHist([image], [0], None, [256], [0, 256]).flatten()
+    else:
+        hist, _ = np.histogram(image, bins=256, range=(0, 256))
+    
     axes[0, 1].plot(hist, color='blue', linewidth=2)
     axes[0, 1].axvline(ga_threshold, color='red', linestyle='--', linewidth=2, label=f'GA: {ga_threshold}')
     axes[0, 1].axvline(traditional_threshold, color='green', linestyle='-', linewidth=2, label=f'Otsu: {traditional_threshold}')
